@@ -53,10 +53,9 @@ func main() {
 	uploader := s3manager.NewUploader(session)
 	var output *s3manager.UploadOutput
 	output, err = uploader.UploadWithContext(context.Background(), &s3manager.UploadInput{
-		Bucket:  aws.String(s3Bucket),
-		Key:     aws.String(objKey),
-		Body:    fromFile,
-		Expires: aws.Time(time.Now().Local().Add(3 * time.Hour)),
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(objKey),
+		Body:   fromFile,
 	})
 	if err != nil {
 		// Print the error and exit.
