@@ -1,4 +1,5 @@
 # AWS CloudFront with Signed URL
+**This is the repository of [my blog post](https://minghsu0107.github.io/posts/aws-cloudfront-with-signed-url/)**.
 This examples shows how to serve private contents on AWS S3 through CloudFront signed URL. We will be using [aws-sdk-go](https://github.com/aws/aws-sdk-go) as the programming client.
 ## Prerequisite
 - A S3 bucket.
