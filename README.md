@@ -20,4 +20,4 @@ CF_PRIKEY_PATH=my-cloudfront-prikey-path \
 go run main.go
 ```
 ## Result
-`hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its object URL `https://my-s3-bucket.s3.us-east-2.amazonaws.com/mysubpath/hello.txt` will be signed, and the signed URL will be printed in the standard output. This link will expire 3 hours later.
+`hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its object URL `https://my-s3-bucket.s3.us-east-2.amazonaws.com/mysubpath/hello.txt` will be signed, and the signed URL will be printed in the standard output. Users can access the object via the signed URL until this link expires after 3 hours.
