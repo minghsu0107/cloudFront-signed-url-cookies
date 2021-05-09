@@ -26,7 +26,7 @@ var (
 	secretKey    = os.Getenv("S3_SECRET_KEY")
 	s3Bucket     = os.Getenv("S3_BUCKET")
 	cfDomain     = os.Getenv("CF_DOMAIN")
-	cfAccessKey  = os.Getenv("CF_ACCESS_KEY")
+	cfAccessKey  = os.Getenv("CF_PUBLIC_KEY_ID")
 	cfPrikeyPath = os.Getenv("CF_PRIKEY_PATH")
 )
 
@@ -51,8 +51,7 @@ func main() {
 	defer fromFile.Close()
 
 	uploader := s3manager.NewUploader(session)
-	var output *s3manager.UploadOutput
-	output, err = uploader.UploadWithContext(context.Background(), &s3manager.UploadInput{
+	_, err = uploader.UploadWithContext(context.Background(), &s3manager.UploadInput{
 		Bucket: aws.String(s3Bucket),
 		Key:    aws.String(objKey),
 		Body:   fromFile,
@@ -78,17 +77,16 @@ func main() {
 
 	var signedURL string
 	signer := sign.NewURLSigner(cfAccessKey, priKey)
-	signedURL, err = signer.Sign(output.Location, time.Now().Add(1*time.Hour))
+
+	rawURL := url.URL{
+		Scheme: "https",
+		Host:   cfDomain,
+		Path:   objKey,
+	}
+	signedURL, err = signer.Sign(rawURL.String(), time.Now().Add(1*time.Hour))
 	if err != nil {
 		exitErrorf("Failed to sign url, err: %v", err)
 	}
-
-	u, err := url.Parse(signedURL)
-	if err != nil {
-		exitErrorf("Failed to parse signed url %v, err: %v", signedURL, err)
-	}
-	u.Host = cfDomain
-	signedURL = u.String()
 	fmt.Printf("Get signed URL %q\n", signedURL)
 }
 
