@@ -7,7 +7,7 @@ This examples shows how to serve private contents on AWS S3 through CloudFront s
 - A CloudFront distribution.
   - Should be created using the S3 owner because S3 bucket policies don’t apply to objects owned by other accounts.
 - The CloudFront bucket access restriction is enabled.
-- The CloudFront origin access identity is created and added to your S3 permission policy.
+- A CloudFront origin access identity is created and added to your S3 permission policy.
 - The CloudFront viewer access restriction is enabled and associated with your key group.
 - The public access of your S3 is blocked (default).
 ## Usage
