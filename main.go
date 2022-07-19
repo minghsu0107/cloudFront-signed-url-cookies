@@ -8,11 +8,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudfront/sign"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/cloudfront/sign"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var (
@@ -31,18 +31,13 @@ var (
 )
 
 func main() {
-	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
-
-	config := &aws.Config{
-		Credentials: creds,
-		Region:      aws.String(s3Region),
-		MaxRetries:  aws.Int(3),
+	creds := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
+	config := aws.Config{
+		Credentials:      creds,
+		Region:           s3Region,
+		RetryMaxAttempts: 3,
 	}
-	session, err := session.NewSession(config)
-	if err != nil {
-		fmt.Println("failed to create session", err)
-		return
-	}
+	s3Client := s3.NewFromConfig(config)
 
 	fromFile, err := os.Open(uploadFrom)
 	if err != nil {
@@ -50,8 +45,8 @@ func main() {
 	}
 	defer fromFile.Close()
 
-	uploader := s3manager.NewUploader(session)
-	_, err = uploader.UploadWithContext(context.Background(), &s3manager.UploadInput{
+	uploader := manager.NewUploader(s3Client)
+	_, err = uploader.Upload(context.Background(), &s3.PutObjectInput{
 		Bucket: aws.String(s3Bucket),
 		Key:    aws.String(objKey),
 		Body:   fromFile,
