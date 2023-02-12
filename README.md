@@ -22,5 +22,9 @@ CF_PRIKEY_PATH=my-cloudfront-prikey-path \
 go run main.go
 ```
 ## Result
-1. `hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its CloudFront URL `https://mycfdomain.cloudfront.net/mysubpath/hello.txt` will be signed, and the signed URL will be printed in the standard output. Users can access the object via this signed URL until it expires 1 hour later.
-2. An http server will be started. Users can set signed cookies by visiting `http://localhost/auth`.
+1. `hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its CloudFront URL `https://mycfdomain.cloudfront.net/mysubpath/hello.txt` will be signed, and the signed URL will be printed to standard output. Users can access the object via this signed URL until it expires after 1 hour.
+2. Signed cookies will be returned and printed to standard output. The signed cookies use the following custom policy:
+    - Allow users to access `https://mycfdomain.cloudfront.net/mysubpath/*` (wildcard).
+    - Signed cookies will expire after 1 hour.
+3. The program will request `https://mycfdomain.cloudfront.net/mysubpath/hello.txt` with signed cookies and print the content of `hello.txt` to standard output.
+4. An http server will be started. Users can set signed cookies via `GET http://localhost/auth`. The following cookies will be set: `CloudFront-Signature`, `CloudFront-Policy`, and `CloudFront-Key-Pair-Id`.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -74,29 +75,24 @@ func main() {
 	}
 
 	var signedURL string
-	signer := sign.NewURLSigner(cfAccessKey, priKey)
+	urlSigner := sign.NewURLSigner(cfAccessKey, priKey)
 
 	rawURL := url.URL{
 		Scheme: "https",
 		Host:   cfDomain,
 		Path:   objKey,
 	}
-	signedURL, err = signer.Sign(rawURL.String(), time.Now().Add(1*time.Hour))
+	signedURL, err = urlSigner.Sign(rawURL.String(), time.Now().Add(1*time.Hour))
 	if err != nil {
 		exitErrorf("Failed to sign url, err: %v", err)
 	}
 	fmt.Printf("Get signed URL %q\n", signedURL)
 
 	cookieSigner := sign.NewCookieSigner(cfAccessKey, priKey)
-	rawURLWildcard := url.URL{
-		Scheme: "https",
-		Host:   cfDomain,
-		Path:   objKeyWildcard,
-	}
 	policy := &sign.Policy{
 		Statements: []sign.Statement{
 			{
-				Resource: rawURLWildcard.String(),
+				Resource: "https://" + cfDomain + "/" + objKeyWildcard,
 				Condition: sign.Condition{
 					// Optional IP source address range
 					// IPAddress: &sign.IPAddress{SourceIP: "192.0.2.0/24"},
@@ -118,6 +114,12 @@ func main() {
 	}
 	fmt.Printf("Created sign cookies: %v\n", cookies)
 
+	content, err := httpGetWithCookie(rawURL.String(), cookies)
+	if err != nil {
+		exitErrorf("failed to access with signed cookies, err: %v", err)
+	}
+	fmt.Printf("Accessed with signed cookies, content: %v\n", content)
+
 	router := gin.Default()
 	router.GET("/auth", func(c *gin.Context) {
 		for _, cookie := range cookies {
@@ -133,4 +135,28 @@ func main() {
 func exitErrorf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
 	os.Exit(1)
+}
+
+func httpGetWithCookie(url string, cookies []*http.Cookie) (string, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	for _, c := range cookies {
+		// only add c.Name and c.Value
+		req.AddCookie(c)
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	data, _ := io.ReadAll(res.Body)
+
+	return string(data), nil
 }
