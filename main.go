@@ -111,7 +111,7 @@ func main() {
 	cookies, err := cookieSigner.SignWithPolicy(policy, func(o *sign.CookieOptions) {
 		o.Path = "/"
 		o.Domain = "localhost"
-		o.Secure = true
+		o.Secure = false
 	})
 	if err != nil {
 		exitErrorf("failed to create signed cookies, err: %v", err)
