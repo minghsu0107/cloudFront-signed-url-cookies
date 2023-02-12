@@ -110,12 +110,13 @@ func main() {
 	}
 	cookies, err := cookieSigner.SignWithPolicy(policy, func(o *sign.CookieOptions) {
 		o.Path = "/"
-		o.Domain = cfDomain
+		o.Domain = "localhost"
 		o.Secure = true
 	})
 	if err != nil {
 		exitErrorf("failed to create signed cookies, err: %v", err)
 	}
+	fmt.Printf("Created sign cookies: %v\n", cookies)
 
 	router := gin.Default()
 	router.GET("/auth", func(c *gin.Context) {
