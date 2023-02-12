@@ -23,4 +23,4 @@ go run main.go
 ```
 ## Result
 1. `hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its CloudFront URL `https://mycfdomain.cloudfront.net/mysubpath/hello.txt` will be signed, and the signed URL will be printed in the standard output. Users can access the object via this signed URL until it expires 1 hour later.
-2. A http server will be started. Users should first obtain signed cookies by visiting `http://localhost/auth`. Afterward, users can access `hello.txt` directly through `https://mycfdomain.cloudfront.net/mysubpath/hello.txt`.
+2. An http server will be started. Users should first obtain signed cookies by visiting `http://localhost/auth`. Afterward, users can access `hello.txt` directly through `https://mycfdomain.cloudfront.net/mysubpath/hello.txt`.
