@@ -1,7 +1,7 @@
 # AWS CloudFront with Signed URL
 **This is the repository of [my blog post](https://minghsu0107.github.io/posts/aws-cloudfront-with-signed-url/)**.
 
-This example shows how to serve private contents on AWS S3 through CloudFront signed URL. We will be using [aws-sdk-go](https://github.com/aws/aws-sdk-go) as the programming client.
+This example shows how to serve private contents on AWS S3 through CloudFront signed URL and signed cookies. We will be using [aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) as the programming client.
 ## Prerequisite
 - A S3 bucket.
 - A CloudFront distribution.
@@ -22,4 +22,5 @@ CF_PRIKEY_PATH=my-cloudfront-prikey-path \
 go run main.go
 ```
 ## Result
-`hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its CloudFront URL `https://mycfdomain.cloudfront.net/mysubpath/hello.txt` will be signed, and the signed URL will be printed in the standard output. Users can access the object via this signed URL until it expires 1 hour later.
+1. `hello.txt` will be uploaded to S3 bucket `my-s3-bucket` with key `mysubpath/hello.txt`. Its CloudFront URL `https://mycfdomain.cloudfront.net/mysubpath/hello.txt` will be signed, and the signed URL will be printed in the standard output. Users can access the object via this signed URL until it expires 1 hour later.
+2. A http server will be started. Users should first obtain signed cookies by visiting `http://localhost/auth`. Afterward, users can access `hello.txt` directly through `https://mycfdomain.cloudfront.net/mysubpath/hello.txt`.

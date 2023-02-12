@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
@@ -13,11 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/cloudfront/sign"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/gin-gonic/gin"
 )
 
 var (
-	objKey     string = "mysubpath/hello.txt"
-	uploadFrom string = "hello.txt"
+	objKey         string = "mysubpath/hello.txt"
+	objKeyWildcard string = "mysubpath/*"
+	uploadFrom     string = "hello.txt"
 )
 
 var (
@@ -83,6 +86,47 @@ func main() {
 		exitErrorf("Failed to sign url, err: %v", err)
 	}
 	fmt.Printf("Get signed URL %q\n", signedURL)
+
+	cookieSigner := sign.NewCookieSigner(cfAccessKey, priKey)
+	rawURLWildcard := url.URL{
+		Scheme: "https",
+		Host:   cfDomain,
+		Path:   objKeyWildcard,
+	}
+	policy := &sign.Policy{
+		Statements: []sign.Statement{
+			{
+				Resource: rawURLWildcard.String(),
+				Condition: sign.Condition{
+					// Optional IP source address range
+					// IPAddress: &sign.IPAddress{SourceIP: "192.0.2.0/24"},
+					// Optional date URL is not valid until
+					// DateGreaterThan: &sign.AWSEpochTime{time.Now().Add(30 * time.Minute)},
+					// Required date the URL will expire after
+					DateLessThan: &sign.AWSEpochTime{time.Now().Add(1 * time.Hour)},
+				},
+			},
+		},
+	}
+	cookies, err := cookieSigner.SignWithPolicy(policy, func(o *sign.CookieOptions) {
+		o.Path = "/"
+		o.Domain = "localhost"
+		o.Secure = false
+	})
+	if err != nil {
+		exitErrorf("failed to create signed cookies, err: %v", err)
+	}
+
+	router := gin.Default()
+	router.GET("/auth", func(c *gin.Context) {
+		for _, cookie := range cookies {
+			http.SetCookie(c.Writer, cookie)
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "ok",
+		})
+	})
+	router.Run(":80")
 }
 
 func exitErrorf(msg string, args ...interface{}) {
